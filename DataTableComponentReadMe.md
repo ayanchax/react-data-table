@@ -146,4 +146,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
-### This setup will render a data table with column-wise drop down filters, pagination, searching, sorting, and ordering, and a lot more, all customized according to the provided props.
+### This setup will render a data table with column-wise drop down filters, pagination, searching, sorting, selection and ordering, and a lot more, all customized according to the provided props.
