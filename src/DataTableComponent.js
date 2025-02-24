@@ -9,13 +9,15 @@ import $ from "jquery";
 import "datatables.net-bs5";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+import "datatables.net-responsive";
+import { v4 as uuidv4 } from "uuid";
 
 const sampleData = [
   { id: 1, name: "John Doe", age: 28, city: "New York" },
   { id: 2, name: "Jane Smith", age: 32, city: "Los Angeles" },
   { id: 3, name: "Sam Wilson", age: 25, city: "Chicago" },
   { id: 4, name: "Chris Evans", age: 35, city: "Houston" },
-  { id: 5, name: "Chris Evans", age: 35, city: "Houston" }, //Duplicate
+  { id: 5, name: "Chris Evans", age: 35, city: "Houston" }, // Duplicate
   { id: 6, name: "Alice Brown", age: 29, city: "Seattle" },
   { name: "Jane Doe", age: 29, city: "Seattle" }, // This will not qualify as a column key is missing
 ];
@@ -27,13 +29,6 @@ const sampleColumns = [
   { key: "city", name: "City" },
 ];
 
-/**
- * @author Swaroop Chakraborty
- * @description: A reusable data table component with column-wise dropdown filters.
- * This component can be customized with various table data and styling configuration props to fit different use cases.
- * Table Rendition Powered by DataTables(https://datatables.net/)
- * @date February 24, 2025
- */
 const DataTableComponent = ({
   id = null,
   title = "Data Table with Column Wise Drop Down Filters",
@@ -41,14 +36,13 @@ const DataTableComponent = ({
   data = sampleData,
   columns = sampleColumns,
   searchPlaceholder = "Search...",
-  config = {}, //Table data configuration
-  style = {}, //Table Styles configuration
+  config = {}, // Table data configuration
+  style = {}, // Table Styles configuration
   onSelect = () => {}, // Function prop invoked when a column is selected, you can choose to perform any custom action based on selection
 }) => {
   const [selectedRows, setSelectedRows] = useState([]);
   const tableRef = useRef(null);
 
-  //Memoization of the table style to prevent useless re-rendering
   const defaultStyle = useMemo(
     () => ({
       className: "table table-striped table-bordered",
@@ -58,21 +52,24 @@ const DataTableComponent = ({
     }),
     [style]
   );
-  //Memoization of the table config to prevent useless re-rendering
+
   const defaultConfig = useMemo(
     () => ({
       paging: true,
       searching: true,
-      columnFilter: true, //Enables columnwise filtering if true
+      columnFilter: true, // Enables columnwise filtering if true
       ordering: true,
       lengthChange: true,
-      lengthMenu:[[5,10,25,50,100], [5,10,25,50,100]],
+      lengthMenu: [
+        [5, 10, 25, 50, 100],
+        [5, 10, 25, 50, 100],
+      ],
       pageLength: 5,
       order: [],
-      fixedHeader:true, //Allows the header to be fixed if set to true
+      fixedHeader: true, // Allows the header to be fixed if set to true
       footer: true,
-      selectable: true, //Lets you select the table rows and do stuff with them, e.g. edit, delete operations
-      responsive: true, //Keeps the table responsive on a variety of screens even on mobile devices
+      selectable: true, // Lets you select the table rows and do stuff with them, e.g. edit, delete operations
+      responsive: true, // Keeps the table responsive on a variety of screens even on mobile devices
       stateSave: false, // Ensures memoization of filters and pagination, only set to true if you want the browser to remember the state of the last search filter applied even on page refresh.
       language: {
         // All message controls for the table
@@ -92,20 +89,38 @@ const DataTableComponent = ({
         ),
       },
 
-      ...config, //Add up any other custom configuration for table
+      ...config, // Add up any other custom configuration for table
     }),
     [config, searchPlaceholder]
   );
+
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      const keys = Object.keys(item);
-      //Allow only those data items which have the same number of keys as the columns
-      return (
-        columns.length === keys.length &&
-        columns.every((col, index) => col.key === keys[index])
-      );
-    });
+    const uniqueIds = new Set();
+    return data
+      .map((item) => {
+        const id = item.id || uuidv4();
+        if (uniqueIds.has(id)) {
+          // Remove the duplicate entry from the data array
+          const index = data.findIndex((dataItem) => dataItem.id === id);
+          if (index !== -1) {
+            data.splice(index, 1);
+          }
+          return null; // Return null to remove the duplicate entry
+        }
+        uniqueIds.add(id);
+        return { ...item, id };
+      })
+      .filter((item) => item !== null) // Filter out null values which represent duplicate entries
+      .filter((item) => {
+        const keys = Object.keys(item);
+        // Allow only those data items which have the same number of keys as the columns
+        return (
+          columns.length === keys.length &&
+          columns.every((col, index) => col.key === keys[index])
+        );
+      });
   }, [data, columns]);
+
   const initializeColumnFilters = useCallback(
     (api) => {
       api.columns().every(function (colIdx) {
@@ -116,11 +131,11 @@ const DataTableComponent = ({
         }
         const column = this;
         const colName = columns[adjustedColIdx]?.name || "";
-      const columnKey = `column_filter_${adjustedColIdx}`;
+        const columnKey = `column_filter_${adjustedColIdx}`;
         const savedFilter = defaultConfig.stateSave
           ? localStorage.getItem(columnKey) || ""
           : "";
-        
+
         const header = $(column.header()).empty();
         header.append(
           `<span class='text-start text-truncate d-block' style="max-width:150px;">${colName}</span>`
@@ -155,18 +170,24 @@ const DataTableComponent = ({
         return true;
       });
     },
-    [columns, defaultConfig.selectable, defaultConfig.stateSave, defaultStyle.columnFilterClassName]
+    [
+      columns,
+      defaultConfig.selectable,
+      defaultConfig.stateSave,
+      defaultStyle.columnFilterClassName,
+    ]
   );
 
   useEffect(() => {
     const columnDefs = defaultConfig.selectable
-    ? [
-        {
-          targets: 0, // First column (Select column)
-          orderable: false, // Disable sorting on select column
-        },
-      ]
-    : [];
+      ? [
+          {
+            targets: 0, // First column (Select column)
+            orderable: false, // Disable sorting on select column
+            className: "dt-body-center",
+          },
+        ]
+      : [];
     const table = $(tableRef.current).DataTable({
       // Setting the configuration
       ...defaultConfig,
@@ -176,10 +197,10 @@ const DataTableComponent = ({
         if (defaultConfig.columnFilter) {
           initializeColumnFilters(this.api());
         }
-        
       },
     });
-    //Display all visible columns in the table
+
+    // Display all visible columns in the table
     table.columns().every(function () {
       $(this.header()).css("display", "");
       return true;
@@ -188,31 +209,43 @@ const DataTableComponent = ({
     return () => {
       table.destroy();
     };
-  }, [defaultConfig, initializeColumnFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultConfig, filteredData, initializeColumnFilters]);
 
   const handleRowSelection = (item) => {
     setSelectedRows((prevSelected) => {
-      const isSelected = prevSelected.some((row) => row.id === item.id);
+      const isSelected = prevSelected.some((row) => row?.id === item?.id);
       const newSelection = isSelected
-        ? prevSelected.filter((row) => row.id !== item.id)
+        ? prevSelected.filter((row) => row?.id !== item?.id)
         : [...prevSelected, item];
-      console.log("Selected Rows:", newSelection);
       onSelect(newSelection);
+      console.log("Selectd rows:", newSelection);
       return newSelection;
     });
   };
+
   useEffect(() => {
-    $(tableRef.current).find("tbody tr").each(function () {
-      const id = parseInt($(this).find("td").eq(1).text(), 10);
-  if (selectedRows.some((row) => row.id === id)) {
-        $(this).addClass("table-primary");
-        $(this).find("input[type='checkbox']").prop("checked", true);
-      } else {
-        $(this).removeClass("table-primary");
-        $(this).find("input[type='checkbox']").prop("checked", false);
-      }
-    });
+    $(tableRef.current)
+      .find("tbody tr")
+      .each(function () {
+        const id = parseInt($(this).find("td").eq(1).text(), 10);
+        if (selectedRows.some((row) => row?.id === id)) {
+          $(this).addClass("table-primary");
+        } else {
+          $(this).removeClass("table-primary");
+        }
+      });
   }, [selectedRows]);
+
+  const toggleSelectAll = (e) => {
+    if (e.target.checked) {
+      const allRowsSelected = filteredData.map((item) => item);
+      setSelectedRows(allRowsSelected);
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
   if (!data) return <></>;
   return (
     <div className="container mt-4">
@@ -235,6 +268,20 @@ const DataTableComponent = ({
         </h5>
       )}
       <div className={defaultConfig.responsive && "table-responsive"}>
+        {defaultConfig.selectable && filteredData.length > 0 && (
+          <div className="form-check mb-2 ">
+          <input
+            id="select-all"
+            type="checkbox"
+            checked={
+              selectedRows && selectedRows.length === filteredData.length
+            }
+            onChange={(e) => toggleSelectAll(e)}
+            className="form-check-input row-select dt-body-center mr-2"
+          />
+          <label className="form-check-label small" htmlFor="select-all">Select all</label>
+        </div>
+        )}
         <table
           id={id}
           ref={tableRef}
@@ -244,49 +291,55 @@ const DataTableComponent = ({
           {/* Dynamic cols */}
           {columns && (
             <thead>
-            <tr>
-              {defaultConfig.selectable && <th></th>}
-              {columns.map((col) => (
-                <th key={col.key}>{col.name}</th>
-              ))}
-            </tr>
-          </thead>
+              <tr>
+                {defaultConfig.selectable && (
+                  <th className="bg-secondary dt-body-center"></th>
+                )}
+                {columns.map((col) => (
+                  <th key={col.key}>{col.name}</th>
+                ))}
+              </tr>
+            </thead>
           )}
           {/* Dynamic data */}
           {filteredData && (
             <tbody>
-            {filteredData.map((item, index) => {
-              const isSelected = selectedRows.some((row) => row.id === item.id);
-           
-              return (
-                <tr
-                  key={index}
-                  className={isSelected ? "table-primary" : ""}
-                  onClick={() => handleRowSelection(item)}
-                >
-                  {/* Add checkbox column if selectable */}
-                  {defaultConfig.selectable && (
-                    <td onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleRowSelection(item)}
-                      />
-                    </td>
-                  )}
-                  
-                   
-                  {columns
-                    .map((col) => (
+              {filteredData.map((item, index) => {
+                const isSelected = selectedRows.some(
+                  (row) => row?.id === item?.id
+                );
+
+                return (
+                  <tr
+                    key={index}
+                    className={isSelected ? "table-primary" : ""}
+                    onClick={() => handleRowSelection(item)}
+                  >
+                    {/* Add checkbox column if selectable */}
+                    {defaultConfig.selectable && (
+                      <td
+                        className="dt-body-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <input
+                          type="checkbox"
+                          onChange={() => handleRowSelection(item)}
+                          className="row-select dt-body-center"
+                          checked={isSelected}
+                          data-id={item.id}
+                        />
+                      </td>
+                    )}
+
+                    {columns.map((col) => (
                       <td key={col.key} className="text-truncate">
                         {item[col.key]}
                       </td>
                     ))}
-                </tr>
-              );
-            })}
-          </tbody>
-           
+                  </tr>
+                );
+              })}
+            </tbody>
           )}
         </table>
       </div>
