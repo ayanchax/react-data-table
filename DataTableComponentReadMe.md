@@ -36,6 +36,9 @@ const sampleColumns = [
   { key: 'age', name: 'Age' },
   { key: 'city', name: 'City' },
 ];
+// The key values in the columns array must be of the same name as your data object keys
+// The length of the columns array must be equal to the number of unique keys in your data object.
+// The name values in the columns array is free-form and can have any value, it will be used to display the column name of the table.
 
 const App = () => {
   return (
