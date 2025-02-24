@@ -99,15 +99,17 @@ export default App;
 
 | Prop                    | Description                                                                 | Type                 | Default |
 |-------------------------|-----------------------------------------------------------------------------|----------------------|---------|
-| `id`                    | Unique identifier for the table.                                            | `string`             | `null`  |
-| `title`                 | Title of the table.                                                        | `string`             | `""`    |
-| `subtitle`              | Subtitle of the table.                                                     | `string`             | `""`    |
+| `id`                    | Unique identifier for the table[Optional].                                            | `string`             | `null`  |
+| `title`                 | Title of the table[Optional].                                                        | `string`             | `""`    |
+| `subtitle`              | Subtitle of the table[Optional].                                                     | `string`             | `""`    |
 | `data`                  | Array of data objects to be displayed in the table.                        | `Array`              | `[]`    |
 | `columns`               | Array of column objects defining the table structure.                      | `Array`              | `[]`    |
-| `searchPlaceholder`     | Placeholder text for the search input.                                     | `string`             | `"Search..."` |
-| `config`                | Configuration object for the DataTables plugin.                             | `Object`             | `{}`    |
-| `style`                 | Style object for customizing the table appearance.                         | `Object`             | `{}`    |
-| `onSelect`              | Function to be called when a row is selected.                               | `Function`           | `() => {}` |
+| `searchPlaceholder`     | Placeholder text for the search input[Optional].                                     | `string`             | `"Search..."` |
+| `config`                | Configuration object for the DataTables plugin[Optional].                             | `Object`             | `{}`    |
+| `style`                 | Style object for customizing the table appearance[Optional].                         | `Object`             | `{}`    |
+| `onSelect`              | Function to be called when a row is selected[Optional].                               | `Function`           | `() => {}` |
+
+Note: The optional properties are pre-configured with their optimal values by default, reducing the need for manual adjustments. Most users will find the default settings sufficient for their needs.
 
 ## Example Data
 
