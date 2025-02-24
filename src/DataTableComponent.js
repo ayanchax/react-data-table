@@ -324,7 +324,7 @@ const DataTableComponent = ({
                         <input
                           type="checkbox"
                           onChange={() => handleRowSelection(item)}
-                          className="row-select dt-body-center"
+                          className="form-check-input row-select dt-body-center"
                           checked={isSelected}
                           data-id={item.id}
                         />
