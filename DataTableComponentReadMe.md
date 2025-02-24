@@ -1,6 +1,6 @@
 # DataTableComponent
 
-A reusable data table React component with column-wise drop-down filters, powered by DataTables.
+The DataTableComponent is a reusable React component designed to display data in a table format with additional features such as column-wise dropdown filters and customizable configurations. This component is built using React, jQuery, and Bootstrap, and can be easily integrated into any React project.
 
 ## Features
 
@@ -28,8 +28,7 @@ import DataTableComponent from 'react-data-table-component';
 const sampleData = [
   { id: 1, name: 'John Doe', age: 30, city: 'New York' },
   { id: 2, name: 'Jane Smith', age: 25, city: 'Los Angeles' },
-  // ... more data
-];
+  // // Add more data as needed, this is ideally the response JSON array of your api
 
 const sampleColumns = [
   { key: 'id', name: 'ID' },
@@ -141,3 +140,4 @@ Pull requests are welcome. For major changes, please open an issue first to disc
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
+This setup will render a data table with column-wise drop down filters, pagination, searching, sorting, and ordering, and a lot more, all customized according to the provided props.
